@@ -1,4 +1,3 @@
-
 # Facebook Messenger Chatbot with OpenAI GPT-3
 
 This guide will walk you through the process of setting up a chatbot that uses the OpenAI GPT-3 model to respond to messages on Facebook Messenger.
