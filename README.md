@@ -1,6 +1,6 @@
 # Facebook Messenger chatbot with OpenAI
 
-MessengerGPT is a small Flask webhook that receives Facebook Messenger messages, sends the text to the OpenAI chat API, and replies through the Facebook Graph API.
+MessengerGPT is a small Flask webhook that receives Facebook Messenger messages, sends the text to the OpenAI Responses API, and replies through the Facebook Graph API.
 
 This repository is a lightweight example for the ReinfyTeam fork. It does not include a production queue, persistent conversation history, secret management service, or retry policy for failed API requests.
 
@@ -45,7 +45,8 @@ Set these environment variables before starting the server:
 
 | Variable | Purpose |
 | --- | --- |
-| `OPENAI_KEY` | OpenAI API key used for chat completions. |
+| `OPENAI_KEY` | OpenAI API key used for Responses API requests. |
+| `OPENAI_MODEL` | Optional model name; defaults to `gpt-4o-mini`. |
 | `PAGE_TOKEN` | Facebook page access token used to send replies. |
 | `ACCESS_TOKEN` | Verification token entered in the Facebook webhook configuration. |
 
@@ -89,8 +90,10 @@ The included [`.replit`](.replit) configuration runs `python app.py` on port 500
 
 ## Current behavior and limitations
 
-- The webhook sends received message text to the OpenAI chat API using the model selected in [`app.py`](app.py).
+- The webhook sends received message text to the OpenAI Responses API using the configured model.
 - The response is sent back through the Facebook Graph API.
+- The integration uses the Responses API `output_text` contract, sends `store: false`, applies bounded request timeouts and does not log message content or credentials.
+- Offline tests cover request construction, output parsing, malformed events and webhook verification. A live OpenAI deployment was not called for this release.
 - The example does not persist conversations or implement a durable background queue.
 - API and webhook exceptions are handled by the current example code and are printed to the process log; production deployments should add structured logging, timeouts, retries and secret management appropriate for their host.
 
