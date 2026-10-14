@@ -1,69 +1,99 @@
-# Facebook Messenger Chatbot with OpenAI GPT-3
+# Facebook Messenger chatbot with OpenAI
 
-This guide will walk you through the process of setting up a chatbot that uses the OpenAI GPT-3 model to respond to messages on Facebook Messenger.
+MessengerGPT is a small Flask webhook that receives Facebook Messenger messages, sends the text to the OpenAI chat API, and replies through the Facebook Graph API.
 
-## Install Using this Script 
+This repository is a lightweight example for the ReinfyTeam fork. It does not include a production queue, persistent conversation history, secret management service, or retry policy for failed API requests.
 
-If you prefer to use a script instead of running the command, you can download the `run_app.sh` script from this repository and run it using `./run_app.sh`.
+## Requirements
+
+- Python 3
+- A Facebook Developer app with a Messenger product and page access token
+- An OpenAI API key
+- A public HTTPS endpoint for Facebook webhook delivery
+
+The project dependency list is in [`requirements.txt`](requirements.txt). The application reads credentials from environment variables; do not commit tokens to the repository.
+
+## Installation
+
+Clone the repository and create an isolated Python environment:
 
 ```sh
-wget https://raw.githubusercontent.com/kentemman/MessengerGPT/main/run_app.sh 
-chmod +x run_app.sh
-./run_app.sh 
+git clone https://github.com/ReinfyTeam/MessengerGPT.git
+cd MessengerGPT
+python -m venv .venv
 ```
 
-## Prerequisites
+Activate the environment and install the project dependencies.
 
-Before getting started, you'll need:
-- A Facebook Developer account
-- A Facebook page for your chatbot
-- An OpenAI API key
-- Python 3 installed on your computer
-- Flask and requests Python packages installed
+On macOS or Linux:
 
-## Step 1: Create a Facebook app and page
+```sh
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
 
-1. Go to the Facebook Developer portal and create a new app.
-2. Follow the steps to set up your app, including adding a Messenger product and linking it to your Facebook page.
-3. Generate a Page Access Token and keep it handy, you'll need it later.
+On Windows PowerShell:
 
-## Step 2: Get an OpenAI API key
-1. If you don't already have one, sign up for an account on the OpenAI website.
-2. Generate an API key for the GPT-3 model, and keep it handy.
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
 
-## Step 3: Set up the Flask server
-1. Create a new directory for your project and navigate to it in the terminal.
-2. Create a new Python file and call it `app.py`.
-3. Paste the code from the original post into this file.
-4. Replace the OpenAI API key and Facebook Page Access Token with your own tokens.
-5. Install the Flask and requests Python packages by running pip install flask requests in the terminal.
-6. Start the Flask server by running python app.py in the terminal.
+## Configuration
 
+Set these environment variables before starting the server:
 
-## Step 4: Set up the Facebook webhook with ngrok
-1. Open a new terminal tab or window and navigate to the directory where you installed ngrok.
-2. Start ngrok by running the command: `./ngrok http 5000`
-3. Note the "Forwarding" URL that is displayed in the ngrok console. This is the URL that you will use as your callback URL in the Facebook Developer portal.
-4. Go back to your Facebook Developer portal and navigate to your app's Messenger settings.
-5. Under the Webhooks section, click on the "Setup Webhooks" button.
-6. Enter
+| Variable | Purpose |
+| --- | --- |
+| `OPENAI_KEY` | OpenAI API key used for chat completions. |
+| `PAGE_TOKEN` | Facebook page access token used to send replies. |
+| `ACCESS_TOKEN` | Verification token entered in the Facebook webhook configuration. |
 
-## Step 5: Test the chatbot
-1. Go to your Facebook page and send a message to your chatbot.
-2. Check the console of your Flask server to see the 3. input message and the response from OpenAI GPT-3.
-4. Check the Facebook Messenger conversation to see 5. the chatbot's response.
+For example, on macOS or Linux:
 
-## Step 6: Deploy the chatbot
-1. Once you're happy with the chatbot's functionality, you can deploy it to a server so that it can run 24/7.
-2. There are many ways to deploy a Flask server, including using services like Heroku, AWS Elastic Beanstalk, or Google Cloud Run.
-3. Follow the instructions for your chosen deployment method to upload your Flask app and run it on a server.
+```sh
+export OPENAI_KEY="your-openai-key"
+export PAGE_TOKEN="your-facebook-page-token"
+export ACCESS_TOKEN="your-webhook-verification-token"
+```
 
+In Windows PowerShell:
 
-###
+```powershell
+$env:OPENAI_KEY = "your-openai-key"
+$env:PAGE_TOKEN = "your-facebook-page-token"
+$env:ACCESS_TOKEN = "your-webhook-verification-token"
+```
 
+## Run locally
 
-## Modified the `nano app.py` if the api is not working
-- Change the `OPEN_AI_API` to your api
-- Change the `PAGE_TOKEN` to your page token
+Start the Flask server with:
 
-That's it! You now have a Facebook Messenger chatbot that uses OpenAI GPT-3 to generate responses. You can customize the chatbot's behavior by modifying the code in app.py.
+```sh
+python app.py
+```
+
+The server listens on `0.0.0.0:5000`. A `GET /` request is used for Facebook webhook verification. A `POST /` request containing a Messenger event is handled as an incoming message.
+
+To test webhook delivery from a local machine, expose port 5000 through an HTTPS tunnel such as [ngrok](https://ngrok.com/):
+
+```sh
+ngrok http 5000
+```
+
+Use the generated HTTPS URL with the `/` path as the callback URL in the Facebook Developer dashboard. Enter the same value as `ACCESS_TOKEN` in the webhook verification-token field, then subscribe the page to the message events required by the bot.
+
+## Deployment
+
+The included [`.replit`](.replit) configuration runs `python app.py` on port 5000 for Replit deployments. For another hosting provider, configure the three environment variables, expose the Flask port through HTTPS, and use the provider's Python process command to run `python app.py`.
+
+## Current behavior and limitations
+
+- The webhook sends received message text to the OpenAI chat API using the model selected in [`app.py`](app.py).
+- The response is sent back through the Facebook Graph API.
+- The example does not persist conversations or implement a durable background queue.
+- API and webhook exceptions are handled by the current example code and are printed to the process log; production deployments should add structured logging, timeouts, retries and secret management appropriate for their host.
+
+## License
+
+This project is distributed under the [MIT License](LICENSE.md).
